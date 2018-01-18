@@ -9,6 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import javax.xml.transform.OutputKeys;
@@ -89,12 +90,17 @@ public class App extends Application {
             String result = "Ooops error";
             try {
                 XPathExpression compile = xPath.compile(textExpression);
-                Node node = (Node)
-                        compile.evaluate(new InputSource(new StringReader(xml)), XPathConstants.NODE);
+                NodeList nodeList = (NodeList)
+                        compile.evaluate(new InputSource(new StringReader(xml)), XPathConstants.NODESET);
+                if (nodeList != null) {
+                    StringBuilder stringBuilder = new StringBuilder();
 
-                if (node != null) {
+                    for (int i = 0; i < nodeList.getLength(); i++) {
+                        result = nodeToString(nodeList.item(i));
+                        stringBuilder.append(result + "\n");
+                    }
 
-                    result = nodeToString(node);
+                    result = stringBuilder.toString();
                     textAreaResult.setText("All good");
                 }
             } catch (Exception e) {
