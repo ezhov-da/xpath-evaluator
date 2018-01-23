@@ -1,12 +1,14 @@
 package ru.ezhov.xpath.evaluator.gui;
 
+
 import javafx.application.Application;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -33,10 +35,40 @@ public class App extends Application {
     public void start(Stage primaryStage) throws Exception {
         BorderPane borderPane = new BorderPane();
 
+        BorderPane borderPaneTop = new BorderPane();
         TextField textFieldExpression = new TextField();
         textFieldExpression.setPromptText("Input XPath...");
 
-        borderPane.setTop(textFieldExpression);
+
+        FlowPane stackPaneBottom = new FlowPane();
+        stackPaneBottom.setAlignment(Pos.CENTER);
+        stackPaneBottom.setBorder(new Border());
+        ToggleGroup toggleGroup = new ToggleGroup();
+
+        RadioButton radioButton1 = new RadioButton("NODESET");
+        radioButton1.setSelected(true);
+        radioButton1.setToggleGroup(toggleGroup);
+        RadioButton radioButton2 = new RadioButton("NODE");
+        radioButton2.setToggleGroup(toggleGroup);
+        RadioButton radioButton3 = new RadioButton("STRING");
+        radioButton3.setToggleGroup(toggleGroup);
+        RadioButton radioButton4 = new RadioButton("NUMBER");
+        radioButton4.setToggleGroup(toggleGroup);
+        RadioButton radioButton5 = new RadioButton("BOOLEAN");
+        radioButton5.setToggleGroup(toggleGroup);
+
+        stackPaneBottom.getChildren().addAll(
+                radioButton1,
+                radioButton2,
+                radioButton3,
+                radioButton4,
+                radioButton5
+        );
+
+        borderPaneTop.setCenter(textFieldExpression);
+        borderPaneTop.setBottom(stackPaneBottom);
+
+        borderPane.setTop(borderPaneTop);
 
         SplitPane splitPane = new SplitPane();
         TextArea textAreaSource = new TextArea();
