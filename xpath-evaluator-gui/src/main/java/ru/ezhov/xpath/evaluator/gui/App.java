@@ -2,34 +2,28 @@ package ru.ezhov.xpath.evaluator.gui;
 
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.SplitPane;
+import javafx.scene.control.Button;
+import javafx.scene.control.*;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+import ru.ezhov.xpath.XPathEvaluator;
+import ru.ezhov.xpath.XPathEvaluatorException;
+import ru.ezhov.xpath.XPathEvaluatorFactory;
+import ru.ezhov.xpath.evaluator.gui.info.InfoWindow;
 
 import javax.xml.namespace.QName;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
+import java.awt.*;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.logging.Logger;
 
@@ -39,6 +33,7 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         BorderPane borderPane = new BorderPane();
+        Scene scene = new Scene(borderPane);
 
         BorderPane borderPaneTop = new BorderPane();
         TextField textFieldExpression = new TextField();
@@ -76,6 +71,16 @@ public class App extends Application {
         );
 
         borderPaneTop.setCenter(textFieldExpression);
+        Button button = new Button("Показать справку по XPath");
+        button.setOnAction(new EventHandler<ActionEvent>() {
+            private InfoWindow infoWindow = new InfoWindow();
+
+            @Override
+            public void handle(ActionEvent event) {
+                infoWindow.show(scene);
+            }
+        });
+        borderPaneTop.setRight(button);
         borderPaneTop.setBottom(stackPaneBottom);
 
         borderPane.setTop(borderPaneTop);
@@ -114,122 +119,48 @@ public class App extends Application {
 
         SplitPane splitPaneVertical = new SplitPane();
         splitPaneVertical.setOrientation(Orientation.VERTICAL);
-        splitPaneVertical.setDividerPositions(0.8, 0.2);
+        splitPaneVertical.setDividerPositions(0.9, 0.1);
         splitPaneVertical.getItems().addAll(splitPane, textAreaError);
 
         borderPane.setCenter(splitPaneVertical);
 
-
-        Scene scene = new Scene(borderPane);
 
         Runnable runnable = () -> {
             Toggle toggle = toggleGroup.getSelectedToggle();
             RadioButton chk = (RadioButton) toggle.getToggleGroup().getSelectedToggle();
             QName qName = (QName) chk.getUserData();
 
-            String textExpression = textFieldExpression.getText();
+            String xpathExpression = textFieldExpression.getText();
             String xml = textAreaSource.getText();
-
-            XPathFactory xPathFactory = XPathFactory.newInstance();
-            XPath xPath = xPathFactory.newXPath();
-            String result = "Ooops error";
-            switch (chk.getText()) {
-                case "NODESET":
-                    try {
-                        XPathExpression compile = xPath.compile(textExpression);
-                        NodeList nodeList = (NodeList)
-                                compile.evaluate(new InputSource(new StringReader(xml)), qName);
-                        if (nodeList != null) {
-                            StringBuilder stringBuilder = new StringBuilder();
-                            for (int i = 0; i < nodeList.getLength(); i++) {
-                                result = nodeToString(nodeList.item(i));
-                                stringBuilder.append(result + "\n");
-                            }
-                            result = stringBuilder.toString();
-                            textAreaResult.setText("All good");
-                        }
-                    } catch (Exception e) {
-                        StringWriter stringWriter = new StringWriter();
-                        e.printStackTrace(new PrintWriter(stringWriter));
-                        textAreaError.setText(stringWriter.toString());
-                    }
-                    break;
-                case "NODE":
-                    try {
-                        XPathExpression compile = xPath.compile(textExpression);
-                        Node node = (Node)
-                                compile.evaluate(new InputSource(new StringReader(xml)), qName);
-                        if (node != null) {
-                            result = nodeToString(node);
-                            textAreaResult.setText("All good");
-                        }
-                    } catch (Exception e) {
-                        StringWriter stringWriter = new StringWriter();
-                        e.printStackTrace(new PrintWriter(stringWriter));
-                        textAreaError.setText(stringWriter.toString());
-                    }
-                    break;
-                case "STRING":
-                    try {
-                        XPathExpression compile = xPath.compile(textExpression);
-                        String s =
-                                compile.evaluate(new InputSource(new StringReader(xml)), qName).toString();
-                        result = s;
-                        textAreaResult.setText("All good");
-                    } catch (Exception e) {
-                        StringWriter stringWriter = new StringWriter();
-                        e.printStackTrace(new PrintWriter(stringWriter));
-                        textAreaError.setText(stringWriter.toString());
-                    }
-                    break;
-                case "NUMBER":
-                    try {
-                        XPathExpression compile = xPath.compile(textExpression);
-                        String s =
-                                compile.evaluate(new InputSource(new StringReader(xml)), qName).toString();
-                        result = s;
-                        textAreaResult.setText("All good");
-                    } catch (Exception e) {
-                        StringWriter stringWriter = new StringWriter();
-                        e.printStackTrace(new PrintWriter(stringWriter));
-                        textAreaError.setText(stringWriter.toString());
-                    }
-                    break;
-                case "BOOLEAN":
-                    try {
-                        XPathExpression compile = xPath.compile(textExpression);
-                        boolean b = Boolean.valueOf(
-                                compile.evaluate(new InputSource(new StringReader(xml)), qName).toString()
-                        );
-                        result = String.valueOf(b);
-                        textAreaResult.setText("All good");
-                    } catch (Exception e) {
-                        StringWriter stringWriter = new StringWriter();
-                        e.printStackTrace(new PrintWriter(stringWriter));
-                        textAreaError.setText(stringWriter.toString());
-                    }
-                    break;
+            if ("".equals(xpathExpression) && "".equals(xml)) {
+                textAreaError.setText("Необходимо указать XPath и XML");
+                return;
+            } else if ("".equals(xpathExpression)) {
+                textAreaError.setText("Необходимо указать XPath");
+                return;
+            } else if ("".equals(xml)) {
+                textAreaError.setText("Необходимо указать XML");
+                return;
             }
 
-            textAreaResult.setText(result);
+            XPathEvaluator xPathEvaluator = XPathEvaluatorFactory.newInstance(qName);
+
+            try {
+                textAreaResult.setText(xPathEvaluator.evaluate(xpathExpression, xml));
+            } catch (XPathEvaluatorException e) {
+                StringWriter stringWriter = new StringWriter();
+                e.printStackTrace(new PrintWriter(stringWriter));
+                textAreaError.setText(stringWriter.toString());
+            }
         };
         toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> runnable.run());
         textFieldExpression.setOnKeyReleased(event -> runnable.run());
         primaryStage.setScene(scene);
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(650);
+        Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+        primaryStage.setWidth(dimension.getWidth() - 200);
+        primaryStage.setHeight(dimension.getHeight() - 100);
         primaryStage.setTitle("XPath evaluator");
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/text-xml.png")));
         primaryStage.show();
-    }
-
-    private String nodeToString(Node node) throws Exception {
-        StringWriter sw = new StringWriter();
-
-        Transformer t = TransformerFactory.newInstance().newTransformer();
-        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        t.setOutputProperty(OutputKeys.INDENT, "yes");
-        t.transform(new DOMSource(node), new StreamResult(sw));
-
-        return sw.toString();
     }
 }
