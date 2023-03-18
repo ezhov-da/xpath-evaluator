@@ -7,6 +7,8 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+import java.util.Objects;
+
 public class InfoWindow {
     private Stage stage = new Stage();
     private TextArea textArea = new TextArea();
@@ -18,7 +20,7 @@ public class InfoWindow {
         borderPane.setCenter(textArea);
         Scene scene = new Scene(borderPane);
         stage.setScene(scene);
-        stage.getIcons().add(new Image(getClass().getResourceAsStream("/text-xml.png")));
+        stage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/text-xml.png"))));
     }
 
     public void show(Scene parent) {

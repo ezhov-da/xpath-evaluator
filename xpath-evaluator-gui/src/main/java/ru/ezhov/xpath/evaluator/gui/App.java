@@ -31,7 +31,7 @@ public class App extends Application {
     private static final Logger LOG = Logger.getLogger(App.class.getName());
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         BorderPane borderPane = new BorderPane();
         Scene scene = new Scene(borderPane);
 
